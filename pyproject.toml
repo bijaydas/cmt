@@ -8,9 +8,13 @@ license = {text = "MIT"}
 authors = [
     {name = "Bijay Das", email = "me@bijaydas.com"},
 ]
-keywords = ["ai", "git", "commit", "message", "generator"]
 dependencies = [
     "pydantic>=2.13.4",
-    "pydantic-settings>=2.15.0",
     "typer>=0.27.1",
 ]
+[project.scripts]
+cmt = "cmt.cli:app"
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+keywords = ["ai", "git", "commit", "message", "generator"]
