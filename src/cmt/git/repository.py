@@ -1,6 +1,7 @@
 import subprocess
-from cmt.models.changes import StagedFile
 from pathlib import Path
+
+from cmt.models.changes import StagedChangeSet, StagedFile
 
 
 class Repository:
@@ -23,16 +24,24 @@ class Repository:
         except subprocess.CalledProcessError:
             return False
 
-    def get_staged_files(self) -> list[StagedFile]:
+    def _get_staged_files(self) -> list[StagedFile]:
         result = self._execute(["git", "diff", "--name-status", "--cached"])
 
         files: list[StagedFile] = []
 
         for line in result.stdout.splitlines():
-            if not line.strip():
-                continue
-
-            status, path = line.split("\t", 1)
+            _line = line.split("\t", 1)
+            status, path = _line
             files.append(StagedFile(status=status, path=path))
 
         return files
+
+    def _get_staged_diff(self) -> str:
+        result = self._execute(["git", "diff", "--cached"])
+        return result.stdout
+
+    def get_staged_changes(self) -> StagedChangeSet:
+        return StagedChangeSet(
+            files=self._get_staged_files(),
+            diff=self._get_staged_diff()
+        )
