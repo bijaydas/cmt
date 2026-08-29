@@ -1,10 +1,11 @@
+from enum import Enum, StrEnum
 from importlib.metadata import version
 
 import typer
 
 from cmt.ai.openai import OpenAIProvider
 from cmt.analysis.analyzer import Analyzer
-from cmt.config.settings import OpenAIConfig, Settings
+from cmt.config.settings import Config, Settings
 from cmt.exceptions import CmtError
 from cmt.git.repository import Repository
 from cmt.utils import edit_with_vim
@@ -32,6 +33,7 @@ def main(
 
 @app.command()
 def suggest() -> None:
+    """Suggest a commit message based on staged changes."""
     try:
         repository = Repository()
         analyzer = Analyzer()
@@ -89,16 +91,34 @@ def suggest() -> None:
         raise typer.Exit(code=1) from None
 
 
+class ConfigTask(StrEnum):
+    set = "set"
+    get = "get"
+
+
 @app.command()
-def config(task: str) -> None:
-    if task == "set":
+def config(task: ConfigTask) -> None:
+    """Configure cmt-cli configuration for OpenAI API key and model."""
+    if task == ConfigTask.set:
         settings = Settings()
 
-        open_ai_key = typer.prompt("Enter your OpenAI API key")
+        open_ai_key = typer.prompt("Enter your OpenAI API key", default=None)
         open_ai_model = typer.prompt(
             "Enter your OpenAI model", default=settings.OPEN_AI_DEFAULT_MODEL
         )
-        settings.set(OpenAIConfig(api_key=open_ai_key, model=open_ai_model))
+        settings.set(Config(api_key=open_ai_key, model=open_ai_model))
+
+    if task == ConfigTask.get:
+        settings = Settings()
+        setting_values = settings.get()
+
+        if setting_values.api_key:
+            typer.echo(f"OpenAI API key: {setting_values.api_key[:10]} ****")
+
+        if setting_values.model:
+            typer.echo(f"OpenAI model: {setting_values.model}")
+
+        raise typer.Exit(code=0)
 
 
 if __name__ == "__main__":

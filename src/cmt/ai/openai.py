@@ -15,11 +15,7 @@ class OpenAIProvider(AIProvider):
         settings = Settings()
         self.config = settings.get()
 
-    def _build_prompt(
-        self,
-        changes: StagedChangeSet,
-        analysis: AnalysisResult
-    ) -> str:
+    def _build_prompt(self, changes: StagedChangeSet, analysis: AnalysisResult) -> str:
         staged_files = self._process_files(changes.files)
         staged_diffs = changes.diff
 
@@ -30,7 +26,7 @@ class OpenAIProvider(AIProvider):
             deleted_files=analysis.deleted_files,
             renamed_files=analysis.renamed_files,
             staged_files=staged_files,
-            staged_diffs=staged_diffs
+            staged_diffs=staged_diffs,
         )
 
     @staticmethod
@@ -60,9 +56,7 @@ class OpenAIProvider(AIProvider):
         return result["structured_response"]
 
     def generate_commit_message(
-        self,
-        change_set: StagedChangeSet,
-        analysis: AnalysisResult
+        self, change_set: StagedChangeSet, analysis: AnalysisResult
     ) -> CommitSuggestion:
         prompt = self._build_prompt(change_set, analysis)
 
@@ -71,8 +65,7 @@ class OpenAIProvider(AIProvider):
 
         if cached_message:
             return CommitSuggestion(
-                message=cached_message.message,
-                description=cached_message.description
+                message=cached_message.message, description=cached_message.description
             )
 
         suggestion = self._invoke(prompt)
