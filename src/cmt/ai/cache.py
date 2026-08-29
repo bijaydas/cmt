@@ -1,6 +1,6 @@
 import hashlib
-from pathlib import Path
 import json
+from pathlib import Path
 
 from cmt.config.settings import Settings
 from cmt.models.suggestion import CommitSuggestion

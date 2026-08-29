@@ -20,6 +20,13 @@ def suggest() -> None:
             raise CmtError("Not a git repository.")
 
         staged_files = repository.get_staged_changes()
+
+        if not staged_files.files:
+            typer.echo(
+                "No staged files found. Please stage your changes before running this command."
+            )
+            raise typer.Exit(code=0)
+
         analysis_result = analyzer.analyze(staged_files)
 
         open_ai = OpenAIProvider()
@@ -51,6 +58,11 @@ def suggest() -> None:
 
     except CmtError as e:
         typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(code=1) from None
+    except typer.Exit:
+        raise
+    except KeyboardInterrupt:
+        typer.echo("\nOperation cancelled by user.", err=True)
         raise typer.Exit(code=1) from None
     except Exception as e:
         typer.echo(f"Unexpected error: {e}", err=True)

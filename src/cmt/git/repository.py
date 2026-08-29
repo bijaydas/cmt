@@ -2,7 +2,6 @@ import subprocess
 from pathlib import Path
 
 from cmt.models.changes import StagedChangeSet, StagedFile
-from cmt.models.suggestion import CommitSuggestion
 
 
 class Repository:
