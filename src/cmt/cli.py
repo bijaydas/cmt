@@ -1,3 +1,5 @@
+from importlib.metadata import version
+
 import typer
 
 from cmt.ai.openai import OpenAIProvider
@@ -7,7 +9,25 @@ from cmt.exceptions import CmtError
 from cmt.git.repository import Repository
 from cmt.utils import edit_with_vim
 
-app = typer.Typer()
+app = typer.Typer(
+    add_completion=False,
+)
+
+
+def version_callback(value: bool) -> None:
+    if value:
+        typer.echo(f"cmt-cli version: {version('cmt-cli')}")
+        raise typer.Exit()
+
+
+@app.callback(invoke_without_command=True)
+def main(
+    ctx: typer.Context,
+    flag: bool = typer.Option(False, "--version", callback=version_callback, is_eager=True),
+) -> None:
+    if ctx.invoked_subcommand is None:
+        typer.echo(ctx.get_help())
+        raise typer.Exit(code=0)
 
 
 @app.command()
