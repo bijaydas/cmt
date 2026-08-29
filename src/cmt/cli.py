@@ -60,7 +60,7 @@ def suggest() -> None:
 
         while True:
             action = (
-                typer.prompt("\nUse this message? [y]es / [e]dit / [n]o", default="y")
+                typer.prompt("Use this message? [y]es / [e]dit / [n]o", default="y")
                 .strip()
                 .lower()[0]
             )
