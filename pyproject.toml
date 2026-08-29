@@ -1,12 +1,12 @@
 [project]
-name = "cmt"
+name = "cmt-cli"
 version = "0.1.0"
 description = "AI-powered Git commit message generator"
 readme = "README.md"
 requires-python = ">=3.12"
-license = {text = "MIT"}
+license = { text = "MIT" }
 authors = [
-    {name = "Bijay Das", email = "me@bijaydas.com"},
+    { name = "Bijay Das", email = "me@bijaydas.com" },
 ]
 dependencies = [
     "langchain>=1.3.18",
@@ -34,14 +34,17 @@ src = ["src"]
 
 [tool.ruff.lint]
 select = [
-    "E",   # pycodestyle errors
-    "F",   # pyflakes
-    "I",   # isort (import sorting)
-    "UP",  # pyupgrade (modern syntax)
-    "B",   # flake8-bugbear (common bugs)
+    "E", # pycodestyle errors
+    "F", # pyflakes
+    "I", # isort (import sorting)
+    "UP", # pyupgrade (modern syntax)
+    "B", # flake8-bugbear (common bugs)
     "SIM", # flake8-simplify
 ]
 ignore = []
 
 [tool.ruff.format]
 quote-style = "double"
+
+[tool.hatch.build.targets.wheel]
+include = ["src/cmt"]
