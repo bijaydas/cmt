@@ -2,6 +2,7 @@ from langchain.agents import create_agent
 from langchain_openai import ChatOpenAI
 from pydantic import SecretStr
 
+from cmt.ai.cache import CommitMessageCache
 from cmt.ai.prompt import COMMIT_PROMPT, COMMIT_SYSTEM_PROMPT
 from cmt.ai.provider import AIProvider
 from cmt.config.settings import Settings
@@ -64,4 +65,22 @@ class OpenAIProvider(AIProvider):
         analysis: AnalysisResult
     ) -> CommitSuggestion:
         prompt = self._build_prompt(change_set, analysis)
-        return self._invoke(prompt)
+
+        cache = CommitMessageCache()
+        cached_message = cache.get(change_set.diff, self.config.model)
+
+        if cached_message:
+            return CommitSuggestion(
+                message=cached_message.message,
+                description=cached_message.description
+            )
+
+        suggestion = self._invoke(prompt)
+
+        cache.set(change_set.diff, self.config.model, suggestion)
+
+        return suggestion
+
+    @staticmethod
+    def commit_command(commit_suggestion: CommitSuggestion) -> str:
+        return f"{commit_suggestion.message} \n\n{commit_suggestion.description}"

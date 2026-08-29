@@ -2,6 +2,7 @@ from configparser import ConfigParser
 from pathlib import Path
 
 from pydantic import BaseModel
+
 from cmt.exceptions import ConfigurationError
 
 
@@ -12,8 +13,9 @@ class OpenAIConfig(BaseModel):
 
 class Settings:
     CONFIG_DIR: Path = Path.home() / ".config" / "cmt"
+    CACHE_DIR: Path = CONFIG_DIR / "cache"
 
-    CONFIG_FILE: Path = CONFIG_DIR / "config.json"
+    CONFIG_FILE: Path = CONFIG_DIR / "config.ini"
     OPEN_AI_DEFAULT_MODEL: str = "gpt-4o-mini"
 
     def set(self, openai_config: OpenAIConfig):

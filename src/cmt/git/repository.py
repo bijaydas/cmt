@@ -2,6 +2,7 @@ import subprocess
 from pathlib import Path
 
 from cmt.models.changes import StagedChangeSet, StagedFile
+from cmt.models.suggestion import CommitSuggestion
 
 
 class Repository:
@@ -45,3 +46,6 @@ class Repository:
             files=self._get_staged_files(),
             diff=self._get_staged_diff()
         )
+
+    def commit(self, message: str) -> subprocess.CompletedProcess:
+        return self._execute(["git", "commit", "-m", message])
