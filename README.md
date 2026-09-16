@@ -9,6 +9,7 @@
   <a href="https://pypi.org/project/cmt-cli/"><img src="https://img.shields.io/pypi/pyversions/cmt-cli.svg" alt="Python versions"></a>
   <a href="https://github.com/bijaydas/cmt/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
   <img src="https://img.shields.io/badge/status-alpha-orange.svg" alt="Alpha status">
+  <img src="https://img.shields.io/badge/tests-passing-green.svg" alt="Tests">
 </p>
 
 <p>
