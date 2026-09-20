@@ -52,3 +52,6 @@ class Settings:
             )
 
         return AIConfig(api_key=api_key, model=model)
+
+
+settings = Settings()

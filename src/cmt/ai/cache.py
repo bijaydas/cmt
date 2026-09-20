@@ -2,13 +2,13 @@ import hashlib
 import json
 from pathlib import Path
 
-from cmt.config.settings import Settings
+from cmt.core.settings import settings
 from cmt.models.suggestion import CommitSuggestion
 
 
 class CommitMessageCache:
     def __init__(self):
-        self.cache_dir = Path(Settings().CACHE_DIR)
+        self.cache_dir = Path(settings.CACHE_DIR)
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
     @staticmethod

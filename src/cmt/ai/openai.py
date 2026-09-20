@@ -5,14 +5,13 @@ from pydantic import SecretStr
 from cmt.ai.cache import CommitMessageCache
 from cmt.ai.prompt import COMMIT_PROMPT, COMMIT_SYSTEM_PROMPT
 from cmt.ai.provider import AIProvider
-from cmt.config.settings import Settings
+from cmt.core.settings import settings
 from cmt.models.changes import AnalysisResult, StagedChangeSet, StagedFile
 from cmt.models.suggestion import CommitSuggestion
 
 
 class OpenAIProvider(AIProvider):
     def __init__(self) -> None:
-        settings = Settings()
         self.config = settings.get()
 
     def _build_prompt(self, changes: StagedChangeSet, analysis: AnalysisResult) -> str:
