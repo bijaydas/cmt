@@ -1,14 +1,8 @@
 from configparser import ConfigParser
 from pathlib import Path
 
-from pydantic import BaseModel
-
 from cmt.exceptions import ConfigurationError
-
-
-class Config(BaseModel):
-    api_key: str
-    model: str
+from cmt.schemas.config import AIConfig
 
 
 class Settings:
@@ -18,7 +12,7 @@ class Settings:
     CONFIG_FILE: Path = CONFIG_DIR / "config.ini"
     OPEN_AI_DEFAULT_MODEL: str = "gpt-4o-mini"
 
-    def set(self, openai_config: Config):
+    def set(self, openai_config: AIConfig):
         self.CONFIG_DIR.mkdir(parents=True, exist_ok=True)
 
         config = ConfigParser()
@@ -35,7 +29,7 @@ class Settings:
         with open(self.CONFIG_FILE, "w") as f:
             config.write(f)
 
-    def get(self) -> Config:
+    def get(self) -> AIConfig:
         if not self.CONFIG_FILE.exists():
             raise FileNotFoundError(
                 "Configuration file not found. Run `cmt config set` to set it up."
@@ -57,4 +51,4 @@ class Settings:
                 "Model not found in the configuration. Run `cmt config set` to set it up."
             )
 
-        return Config(api_key=api_key, model=model)
+        return AIConfig(api_key=api_key, model=model)
