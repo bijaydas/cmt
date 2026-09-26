@@ -1,4 +1,9 @@
+import logging
+from typing import cast
+
 from langchain.agents import create_agent
+from langchain.agents.middleware.types import InputAgentState
+from langchain_core.messages import BaseMessage, get_buffer_string
 from langchain_openai import ChatOpenAI
 from pydantic import SecretStr
 
@@ -9,12 +14,16 @@ from cmt.core.settings import settings
 from cmt.models.changes import AnalysisResult, StagedChangeSet, StagedFile
 from cmt.models.suggestion import CommitSuggestion
 
+logger = logging.getLogger(__name__)
+
 
 class OpenAIProvider(AIProvider):
     def __init__(self) -> None:
         self.config = settings.get()
 
-    def _build_prompt(self, changes: StagedChangeSet, analysis: AnalysisResult) -> str:
+    def _build_prompt(
+        self, changes: StagedChangeSet, analysis: AnalysisResult
+    ) -> list[BaseMessage]:
         staged_files = self._process_files(changes.files)
         staged_diffs = changes.diff
 
@@ -36,12 +45,14 @@ class OpenAIProvider(AIProvider):
 
         return output.strip()
 
-    def _invoke(self, prompt: str) -> CommitSuggestion:
+    def _invoke(self, prompt: list[BaseMessage]) -> CommitSuggestion:
         model = ChatOpenAI(
             model=self.config.model,
             api_key=SecretStr(self.config.api_key),
             timeout=30,
-            max_tokens=1200,
+        )
+        logger.info(
+            "Invoking %s model with prompt:\n%s", self.config.model, get_buffer_string(prompt)
         )
 
         agent = create_agent(
@@ -50,7 +61,7 @@ class OpenAIProvider(AIProvider):
             response_format=CommitSuggestion,
         )
 
-        result = agent.invoke({"messages": prompt})
+        result = agent.invoke(cast(InputAgentState, prompt))
 
         return result["structured_response"]
 
@@ -63,13 +74,22 @@ class OpenAIProvider(AIProvider):
         cached_message = cache.get(change_set.diff, self.config.model)
 
         if cached_message:
-            return CommitSuggestion(
+            suggestion = CommitSuggestion(
                 message=cached_message.message, description=cached_message.description
             )
+            logger.info(
+                "Returning cached commit suggestion for the following changes:\n\n%s\n\n"
+                "Commit message: %s",
+                change_set.diff,
+                suggestion.message,
+            )
+            return suggestion
 
         suggestion = self._invoke(prompt)
+        logger.info("Generated new commit suggestion.\n%s", suggestion)
 
         cache.set(change_set.diff, self.config.model, suggestion)
+        logger.info("Cached new commit suggestion.")
 
         return suggestion
 

@@ -1,15 +1,20 @@
+import logging
+import sys
 from importlib.metadata import version
 
 import typer
 
 from cmt.ai.openai import OpenAIProvider
 from cmt.analysis.analyzer import Analyzer
+from cmt.core.logging import setup_logging
 from cmt.core.settings import settings
 from cmt.enums.config import ConfigTask
 from cmt.exceptions import CmtError
 from cmt.git.repository import Repository
 from cmt.schemas.config import AIConfig
 from cmt.utils import edit_with_vim
+
+logger = logging.getLogger(__name__)
 
 app = typer.Typer(
     add_completion=False,
@@ -27,7 +32,9 @@ def main(
     ctx: typer.Context,
     flag: bool = typer.Option(False, "--version", callback=version_callback, is_eager=True),
 ) -> None:
+    setup_logging()
     if ctx.invoked_subcommand is None:
+        logger.info("No subcommand invoked, displaying help.")
         typer.echo(ctx.get_help())
         raise typer.Exit(code=0)
 
@@ -40,11 +47,15 @@ def suggest() -> None:
         analyzer = Analyzer()
 
         if not repository.is_git_repository():
+            logger.error("Not a git repository.")
             raise CmtError("Not a git repository.")
 
         staged_files = repository.get_staged_changes()
 
         if not staged_files.files:
+            logger.warning(
+                "No staged files found. Please stage your changes before running this command."
+            )
             typer.echo(
                 "No staged files found. Please stage your changes before running this command."
             )
@@ -55,8 +66,10 @@ def suggest() -> None:
         open_ai = OpenAIProvider()
 
         commit = open_ai.generate_commit_message(staged_files, analysis_result)
+        sys.exit()
         commit_command = OpenAIProvider.commit_command(commit)
 
+        logger.info("Suggested commit:\n\n%s", commit_command)
         typer.echo(f"Suggested commit:\n\n{commit_command}")
 
         while True:
@@ -75,7 +88,10 @@ def suggest() -> None:
                 typer.echo(f"Edited commit:\n\n{commit_command}")
 
             if action == "y":
+                logger.info("Committing with message:\n\n%s", commit_command)
                 result = repository.commit(commit_command)
+
+                logger.info("Commit result:\n\n%s", result.stdout)
                 typer.echo(f"Commit result:\n\n{result.stdout}")
                 break
 
@@ -85,9 +101,11 @@ def suggest() -> None:
     except typer.Exit:
         raise
     except KeyboardInterrupt:
+        logger.info("Operation cancelled by user.")
         typer.echo("\nOperation cancelled by user.", err=True)
         raise typer.Exit(code=1) from None
     except Exception as e:
+        logger.error("Unexpected error: %s", e)
         typer.echo(f"Unexpected error: {e}", err=True)
         raise typer.Exit(code=1) from None
 
@@ -100,6 +118,7 @@ def config(task: ConfigTask) -> None:
         open_ai_model = typer.prompt(
             "Enter your OpenAI model", default=settings.OPEN_AI_DEFAULT_MODEL
         )
+        logger.info("Configuration updated with OpenAI API key and model.")
         settings.set(AIConfig(api_key=open_ai_key, model=open_ai_model))
 
     if task == ConfigTask.get:
@@ -110,6 +129,8 @@ def config(task: ConfigTask) -> None:
 
         if setting_values.model:
             typer.echo(f"OpenAI model: {setting_values.model}")
+
+        logger.info("Retrieved current configuration.")
 
         raise typer.Exit(code=0)
 
