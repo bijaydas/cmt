@@ -1,14 +1,12 @@
 [project]
 name = "cmt-cli"
-version = "0.2.0"
+version = "1.0.0"
 description = "AI-powered Git commit message generator"
 readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "MIT" }
 license-files = ["LICENSE"]
-authors = [
-    { name = "Bijay Das", email = "me@bijaydas.com" },
-]
+authors = [{ name = "Bijay Das", email = "me@bijaydas.com" }]
 dependencies = [
     "langchain>=1.3.18",
     "langchain-openai>=1.6.0",
@@ -39,10 +37,7 @@ build-backend = "hatchling.build"
 keywords = ["ai", "git", "commit", "message", "generator"]
 
 [dependency-groups]
-dev = [
-    "pytest>=9.1.1",
-    "ruff>=0.16.5",
-]
+dev = ["pytest>=9.1.1", "ruff>=0.16.5"]
 [tool.ruff]
 line-length = 100
 target-version = "py312"
@@ -50,11 +45,11 @@ src = ["src"]
 
 [tool.ruff.lint]
 select = [
-    "E", # pycodestyle errors
-    "F", # pyflakes
-    "I", # isort (import sorting)
-    "UP", # pyupgrade (modern syntax)
-    "B", # flake8-bugbear (common bugs)
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "I",   # isort (import sorting)
+    "UP",  # pyupgrade (modern syntax)
+    "B",   # flake8-bugbear (common bugs)
     "SIM", # flake8-simplify
 ]
 ignore = []

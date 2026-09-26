@@ -6,12 +6,12 @@ import typer
 
 from cmt.ai.openai import OpenAIProvider
 from cmt.analysis.analyzer import Analyzer
-from cmt.core.logging import setup_logging
-from cmt.core.settings import settings
+from cmt.core import settings, setup_logging
 from cmt.enums.config import ConfigTask
 from cmt.exceptions import CmtError
 from cmt.git.repository import Repository
 from cmt.schemas.config import AIConfig
+from cmt.services import PyPIService
 from cmt.utils import edit_with_vim
 
 logger = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ app = typer.Typer(
 
 def version_callback(value: bool) -> None:
     if value:
-        typer.echo(f"cmt-cli version: {version('cmt-cli')}")
+        typer.echo(f"cmt-cli version: {version(settings.APP_NAME)}")
         raise typer.Exit()
 
 
@@ -133,6 +133,38 @@ def config(task: ConfigTask) -> None:
         logger.info("Retrieved current configuration.")
 
         raise typer.Exit(code=0)
+
+
+@app.command()
+def update() -> None:
+    """Update cmt-cli to the latest version."""
+    logger.info("Starting update process for %s.", settings.APP_NAME)
+
+    current_version = version(settings.APP_NAME)
+    logger.info("Current %s version: %s", settings.APP_NAME, current_version)
+
+    pypi_service = PyPIService()
+    latest_info_response = pypi_service.any_update(current_version=current_version)
+
+    if latest_info_response.updated_required:
+        logger.info(
+            "Update required: current version %s, latest version %s",
+            latest_info_response.current_version,
+            latest_info_response.latest_version,
+        )
+        typer.echo(
+            f"A new version of {settings.APP_NAME} is available: "
+            f"{latest_info_response.latest_version}.\n\n"
+            f"upgrade {settings.APP_NAME} using your package manager.",
+        )
+    else:
+        logger.info(
+            "No update required. You are using the latest version: %s",
+            latest_info_response.current_version,
+        )
+        typer.echo(f"You are using the latest version of {settings.APP_NAME}")
+
+    raise typer.Exit(code=0)
 
 
 if __name__ == "__main__":
