@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="art/cmt-cli.svg" alt="cmt-cli logo" width="400">
+  <img src="https://raw.githubusercontent.com/bijaydas/cmt/refs/heads/main/art/cmt-cli.svg" alt="cmt-cli logo" width="400">
 </p>
 
 # cmt-cli
