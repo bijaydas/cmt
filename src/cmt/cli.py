@@ -1,5 +1,4 @@
 import logging
-import sys
 from importlib.metadata import version
 
 import typer
@@ -66,7 +65,7 @@ def suggest() -> None:
         open_ai = OpenAIProvider()
 
         commit = open_ai.generate_commit_message(staged_files, analysis_result)
-        sys.exit()
+
         commit_command = OpenAIProvider.commit_command(commit)
 
         logger.info("Suggested commit:\n\n%s", commit_command)

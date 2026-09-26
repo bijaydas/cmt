@@ -59,14 +59,4 @@ Renamed: {renamed_files}
 Generate the commit message now.
 """
 
-COMMIT_PROMPT1 = ChatPromptTemplate.from_messages(
-    [
-        ("human", COMMIT_DATA_PROMPT),
-    ]
-)
-
-COMMIT_PROMPT = ChatPromptTemplate(
-    [
-        ("human", COMMIT_DATA_PROMPT),
-    ]
-)
+COMMIT_PROMPT_TEMPLATE = ChatPromptTemplate.from_template(COMMIT_DATA_PROMPT)

@@ -1,14 +1,11 @@
 import logging
-from typing import cast
 
 from langchain.agents import create_agent
-from langchain.agents.middleware.types import InputAgentState
-from langchain_core.messages import BaseMessage, get_buffer_string
 from langchain_openai import ChatOpenAI
 from pydantic import SecretStr
 
 from cmt.ai.cache import CommitMessageCache
-from cmt.ai.prompt import COMMIT_PROMPT, COMMIT_SYSTEM_PROMPT
+from cmt.ai.prompt import COMMIT_PROMPT_TEMPLATE, COMMIT_SYSTEM_PROMPT
 from cmt.ai.provider import AIProvider
 from cmt.core.settings import settings
 from cmt.models.changes import AnalysisResult, StagedChangeSet, StagedFile
@@ -21,20 +18,20 @@ class OpenAIProvider(AIProvider):
     def __init__(self) -> None:
         self.config = settings.get()
 
-    def _build_prompt(
-        self, changes: StagedChangeSet, analysis: AnalysisResult
-    ) -> list[BaseMessage]:
+    def _build_prompt(self, changes: StagedChangeSet, analysis: AnalysisResult):
         staged_files = self._process_files(changes.files)
         staged_diffs = changes.diff
 
-        return COMMIT_PROMPT.format_messages(
-            total_files=len(changes.files),
-            added_files=analysis.added_files,
-            modified_files=analysis.modified_files,
-            deleted_files=analysis.deleted_files,
-            renamed_files=analysis.renamed_files,
-            staged_files=staged_files,
-            staged_diffs=staged_diffs,
+        return COMMIT_PROMPT_TEMPLATE.invoke(
+            {
+                "total_files": len(changes.files),
+                "added_files": analysis.added_files,
+                "modified_files": analysis.modified_files,
+                "deleted_files": analysis.deleted_files,
+                "renamed_files": analysis.renamed_files,
+                "staged_files": staged_files,
+                "staged_diffs": staged_diffs,
+            }
         )
 
     @staticmethod
@@ -45,15 +42,13 @@ class OpenAIProvider(AIProvider):
 
         return output.strip()
 
-    def _invoke(self, prompt: list[BaseMessage]) -> CommitSuggestion:
+    def _invoke(self, prompt) -> CommitSuggestion:
         model = ChatOpenAI(
             model=self.config.model,
             api_key=SecretStr(self.config.api_key),
             timeout=30,
         )
-        logger.info(
-            "Invoking %s model with prompt:\n%s", self.config.model, get_buffer_string(prompt)
-        )
+        logger.info("Invoking %s model with prompt:\n%s", self.config.model, prompt.to_string())
 
         agent = create_agent(
             model=model,
@@ -61,7 +56,7 @@ class OpenAIProvider(AIProvider):
             response_format=CommitSuggestion,
         )
 
-        result = agent.invoke(cast(InputAgentState, prompt))
+        result = agent.invoke(prompt)
 
         return result["structured_response"]
 
@@ -86,10 +81,15 @@ class OpenAIProvider(AIProvider):
             return suggestion
 
         suggestion = self._invoke(prompt)
+
         logger.info("Generated new commit suggestion.\n%s", suggestion)
 
         cache.set(change_set.diff, self.config.model, suggestion)
         logger.info("Cached new commit suggestion.")
+
+        suggestion = CommitSuggestion(
+            message=suggestion.message, description=suggestion.description
+        )
 
         return suggestion
 
