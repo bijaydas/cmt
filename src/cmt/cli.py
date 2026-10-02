@@ -5,7 +5,11 @@ import typer
 
 from cmt.ai.openai import OpenAIProvider
 from cmt.analysis.analyzer import Analyzer
-from cmt.core import settings, setup_logging
+from cmt.core import (
+    console,
+    settings,
+    setup_logging,
+)
 from cmt.enums.config import ConfigTask
 from cmt.exceptions import CmtError
 from cmt.git.repository import Repository
@@ -22,7 +26,8 @@ app = typer.Typer(
 
 def version_callback(value: bool) -> None:
     if value:
-        typer.echo(f"cmt-cli version: {version(settings.APP_NAME)}")
+        console.print(f"[brand]cmt-cli[/brand] [muted]version {version(settings.APP_NAME)}[/muted]")
+        console.print("Run 'cmt update' to check for updates.")
         raise typer.Exit()
 
 
@@ -34,7 +39,7 @@ def main(
     setup_logging()
     if ctx.invoked_subcommand is None:
         logger.info("No subcommand invoked, displaying help.")
-        typer.echo(ctx.get_help())
+        console.print(ctx.get_help())
         raise typer.Exit(code=0)
 
 
@@ -55,57 +60,66 @@ def suggest() -> None:
             logger.warning(
                 "No staged files found. Please stage your changes before running this command."
             )
-            typer.echo(
+            console.print_warning(
                 "No staged files found. Please stage your changes before running this command."
             )
             raise typer.Exit(code=0)
 
-        analysis_result = analyzer.analyze(staged_files)
+        with console.get_console().status(
+            "[brand]Analyzing staged changes...[/brand]", spinner="dots"
+        ):
+            analysis_result = analyzer.analyze(staged_files)
 
-        open_ai = OpenAIProvider()
+            open_ai = OpenAIProvider()
 
-        commit = open_ai.generate_commit_message(staged_files, analysis_result)
+        with console.get_console().status(
+            "[brand]Generating commit message...[/brand]", spinner="dots"
+        ):
+            commit = open_ai.generate_commit_message(staged_files, analysis_result)
 
         commit_command = OpenAIProvider.commit_command(commit)
 
-        logger.info("Suggested commit:\n\n%s", commit_command)
-        typer.echo(f"Suggested commit:\n\n{commit_command}")
+        logger.info("Suggested commit:%s", commit_command)
+        console.print_suggested_commit(commit_command)
 
         while True:
             action = (
-                typer.prompt("Use this message? [y]es / [e]dit / [n]o", default="y")
+                typer.prompt(
+                    "Would you like to use this commit message? [y]es / [e]dit / [n]o",
+                    default="y",
+                )
                 .strip()
                 .lower()[0]
             )
 
             if action == "n":
-                typer.echo("Aborted.")
+                console.print_warning("Aborted.")
                 break
 
             if action == "e":
                 commit_command = edit_with_vim(commit_command)
-                typer.echo(f"Edited commit:\n\n{commit_command}")
+                console.print_suggested_commit(commit_command)
 
             if action == "y":
                 logger.info("Committing with message:\n\n%s", commit_command)
                 result = repository.commit(commit_command)
 
                 logger.info("Commit result:\n\n%s", result.stdout)
-                typer.echo(f"Commit result:\n\n{result.stdout}")
+                console.print_success("Code committed")
                 break
 
     except CmtError as e:
-        typer.echo(f"Error: {e}", err=True)
+        console.print_error(str(e))
         raise typer.Exit(code=1) from None
     except typer.Exit:
         raise
     except KeyboardInterrupt:
         logger.info("Operation cancelled by user.")
-        typer.echo("\nOperation cancelled by user.", err=True)
+        console.print_warning("Operation cancelled by user.")
         raise typer.Exit(code=1) from None
     except Exception as e:
         logger.error("Unexpected error: %s", e)
-        typer.echo(f"Unexpected error: {e}", err=True)
+        console.print_error(f"\nUnexpected error: {e}")
         raise typer.Exit(code=1) from None
 
 
@@ -115,10 +129,13 @@ def config(task: ConfigTask) -> None:
     if task == ConfigTask.set:
         open_ai_key = typer.prompt("Enter your OpenAI API key", default=None)
         open_ai_model = typer.prompt(
-            "Enter your OpenAI model", default=settings.OPEN_AI_DEFAULT_MODEL
+            "Enter your OpenAI model",
+            default=settings.OPEN_AI_DEFAULT_MODEL,
         )
         logger.info("Configuration updated with OpenAI API key and model.")
         settings.set(AIConfig(api_key=open_ai_key, model=open_ai_model))
+
+        console.print_success("Configuration updated.")
 
     if task == ConfigTask.get:
         setting_values = settings.get()
@@ -128,6 +145,8 @@ def config(task: ConfigTask) -> None:
 
         if setting_values.model:
             typer.echo(f"OpenAI model: {setting_values.model}")
+
+        typer.echo("Run `cmt config set` to update the configuration.")
 
         logger.info("Retrieved current configuration.")
 
@@ -142,8 +161,9 @@ def update() -> None:
     current_version = version(settings.APP_NAME)
     logger.info("Current %s version: %s", settings.APP_NAME, current_version)
 
-    pypi_service = PyPIService()
-    latest_info_response = pypi_service.any_update(current_version=current_version)
+    with console.get_console().status("[brand]Checking for updates...[/brand]", spinner="dots"):
+        pypi_service = PyPIService()
+        latest_info_response = pypi_service.any_update(current_version=current_version)
 
     if latest_info_response.updated_required:
         logger.info(
@@ -151,17 +171,19 @@ def update() -> None:
             latest_info_response.current_version,
             latest_info_response.latest_version,
         )
-        typer.echo(
+        console.print(
             f"A new version of {settings.APP_NAME} is available: "
-            f"{latest_info_response.latest_version}.\n\n"
-            f"upgrade {settings.APP_NAME} using your package manager.",
+            f"[brand]{latest_info_response.latest_version}[/brand].\n\n"
+            f"upgrade {settings.APP_NAME} using your package manager."
         )
     else:
         logger.info(
             "No update required. You are using the latest version: %s",
             latest_info_response.current_version,
         )
-        typer.echo(f"You are using the latest version of {settings.APP_NAME}")
+        console.print_success(
+            f"You are using the latest version {latest_info_response.current_version}"
+        )
 
     raise typer.Exit(code=0)
 

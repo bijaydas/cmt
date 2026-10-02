@@ -95,4 +95,6 @@ class OpenAIProvider(AIProvider):
 
     @staticmethod
     def commit_command(commit_suggestion: CommitSuggestion) -> str:
+        if not commit_suggestion.description:
+            return commit_suggestion.message
         return f"{commit_suggestion.message} \n\n{commit_suggestion.description}"
