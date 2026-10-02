@@ -31,13 +31,22 @@ such as `chore`.
 10. Use imperative mood.
 11. Do not mention individual files unless necessary.
 12. Do not generate multiple commit messages.
-13. Do not include a commit body.
-14. Return ONLY the commit message.
-15. Do not include markdown, quotes, explanations, or additional text.
+13. Only add a description if the change is complex enough that the short description alone is
+insufficient to understand it (e.g., multiple distinct changes, non-obvious rationale, or
+breaking changes).
+14. When a description is required, format it as a bullet list, with one point per notable
+change, placed after a blank line following the short description.
+15. Keep each bullet point concise and in imperative mood.
+16. Return ONLY the commit message.
+17. Do not include markdown formatting (headers, bold, code blocks, etc.), quotes, explanations,
+or additional text, other than the hyphen-prefixed bullet list described above.
 
 ## Commit message format
 
 <type>[optional scope]: <short description>
+
+- <description bullet point 1>
+- <description bullet point 2>
 """
 
 COMMIT_DATA_PROMPT = """## Change statistics
