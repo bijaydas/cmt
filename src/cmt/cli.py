@@ -110,6 +110,7 @@ def suggest() -> None:
 
     except CmtError as e:
         console.print_error(str(e))
+        logger.error("CmtError: %s", e)
         raise typer.Exit(code=1) from None
     except typer.Exit:
         raise

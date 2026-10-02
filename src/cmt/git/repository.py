@@ -1,6 +1,7 @@
 import subprocess
 from pathlib import Path
 
+from cmt.exceptions import GitError
 from cmt.models.changes import StagedChangeSet, StagedFile
 
 
@@ -9,19 +10,20 @@ class Repository:
         self.root = Path(root) if root is not None else Path.cwd()
 
     def _execute(self, command: list[str]) -> subprocess.CompletedProcess:
-        return subprocess.run(
-            command,
-            cwd=self.root,
-            capture_output=True,
-            check=True,
-            text=True
-        )
+        try:
+            return subprocess.run(
+                command, cwd=self.root, capture_output=True, check=True, text=True
+            )
+        except subprocess.CalledProcessError as e:
+            output = "\n".join(filter(None, [e.stdout, e.stderr])).strip()
+            output = output or "no error output was returned."
+            raise GitError(output) from e
 
     def is_git_repository(self):
         try:
             result = self._execute(["git", "rev-parse", "--is-inside-work-tree"])
             return result.stdout.strip() == "true"
-        except subprocess.CalledProcessError:
+        except GitError:
             return False
 
     def _get_staged_files(self) -> list[StagedFile]:
@@ -41,10 +43,7 @@ class Repository:
         return result.stdout
 
     def get_staged_changes(self) -> StagedChangeSet:
-        return StagedChangeSet(
-            files=self._get_staged_files(),
-            diff=self._get_staged_diff()
-        )
+        return StagedChangeSet(files=self._get_staged_files(), diff=self._get_staged_diff())
 
     def commit(self, message: str) -> subprocess.CompletedProcess:
         return self._execute(["git", "commit", "-m", message])
