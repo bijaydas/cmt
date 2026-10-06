@@ -1,8 +1,8 @@
-from cmt.models.changes import AnalysisResult, StagedChangeSet
+from cmt.models.changes import AnalysisResult, ChangeSet
 
 
 class Analyzer:
-    def analyze(self, change_set: StagedChangeSet) -> AnalysisResult:
+    def analyze(self, change_set: ChangeSet) -> AnalysisResult:
         added = 0
         modified = 0
         deleted = 0

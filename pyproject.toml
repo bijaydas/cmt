@@ -59,4 +59,4 @@ ignore = []
 quote-style = "double"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/cmt"]
+packages = ["src/cmt", "src/prompts"]

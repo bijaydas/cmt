@@ -56,6 +56,15 @@ class RichConsole:
             padding=(1, 2),
         )
 
+    def render_summary_panel(self, summary: str, title: str = "Summary") -> Panel:
+        return Panel(
+            summary,
+            title=f"[brand]{title}[/brand]",
+            title_align="left",
+            border_style="brand",
+            padding=(1, 2),
+        )
+
     def print_suggested_commit(self, commit_message: str, title: str = "Suggested commit") -> None:
         self._console.print(self._render_commit_panel(commit_message, title=title))
 

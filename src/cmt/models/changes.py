@@ -1,13 +1,15 @@
 from pydantic import BaseModel
 
 
-class StagedFile(BaseModel):
+class File(BaseModel):
     status: str
     path: str
 
-class StagedChangeSet(BaseModel):
-    files: list[StagedFile]
+
+class ChangeSet(BaseModel):
+    files: list[File]
     diff: str
+
 
 class AnalysisResult(BaseModel):
     total_files: int

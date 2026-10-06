@@ -1,4 +1,4 @@
-from cmt.git.repository import Repository
+from cmt.services.repository import Repository
 
 
 def test_invalid_git_repository(tmp_path):

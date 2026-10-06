@@ -59,11 +59,11 @@ Renamed: {renamed_files}
 
 ## Staged files
 
-{staged_files}
+{changed_files}
 
 ## Staged Git diff
 
-{staged_diffs}
+{diffs}
 
 Generate the commit message now.
 """
