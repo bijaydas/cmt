@@ -129,6 +129,7 @@ def update() -> None:
 
 @app.command()
 def summary() -> None:
+    """Generate a summary of the current Git repository"""
     try:
         SummaryCommand().run()
     except CmtError as e:
