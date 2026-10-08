@@ -1,8 +1,11 @@
+import logging
 import subprocess
 from pathlib import Path
 
 from cmt.exceptions import GitError
 from cmt.models.changes import ChangeSet, File
+
+logger = logging.getLogger(__name__)
 
 
 class Repository:
@@ -54,16 +57,50 @@ class Repository:
         )
 
     def _get_changes_for_non_deleted_files(self) -> str:
-        result = self._execute(["git", "diff", "HEAD", "--diff-filter=AM"])
+
+        if not self._check_if_any_commit_exits():
+            return ""
+
+        command = ["git", "diff", "HEAD", "--diff-filter=AM"]
+        logger.info("Executing command: %s", " ".join(command))
+
+        result = self._execute(command)
+        logger.info("Command output: %s", result.stdout)
+
         return result.stdout
 
     def _get_current_files(self) -> list[File]:
-        result = self._execute(["git", "diff", "HEAD", "--name-status"])
+        command = ["git", "diff", "HEAD", "--name-status"]
+        is_zero_commits = not self._check_if_any_commit_exits()
+
+        if is_zero_commits:
+            command = ["git", "ls-files", "--others", "--exclude-standard"]
+
+        logger.info("Executing command: %s", " ".join(command))
+        result = self._execute(command)
+        logger.info("Command output: %s", result.stdout)
+
         files: list[File] = []
 
         for line in result.stdout.splitlines():
             _line = line.split("\t", 1)
-            status, path = _line
-            files.append(File(status=status, path=path))
+            _status = None
+            _path = None
+
+            if len(_line) > 1:
+                _status, _path = _line
+            else:
+                _status = "A"
+                _path = _line[0] if _line else ""
+
+            files.append(File(status=_status, path=_path))
 
         return files
+
+    def _check_if_any_commit_exits(self) -> bool:
+        logger.info("Checking if any commit exists")
+        try:
+            result = self._execute(["git", "log", "-1"])
+            return bool(result.stdout.strip())
+        except GitError:
+            return False

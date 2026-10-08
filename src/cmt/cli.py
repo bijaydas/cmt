@@ -13,9 +13,7 @@ from cmt.core import (
 from cmt.enums.config import ConfigTask
 from cmt.exceptions import CmtError
 from cmt.schemas.config import AIConfig
-from cmt.services import Analyzer, PromptService, PyPIService
-from cmt.services.repository import Repository
-from cmt.utils import edit_with_vim
+from cmt.services import PyPIService
 
 logger = logging.getLogger(__name__)
 
@@ -47,66 +45,7 @@ def main(
 def suggest() -> None:
     """Suggest a commit message based on staged changes."""
     try:
-        repository = Repository()
-        analyzer = Analyzer()
-        prompt_service = PromptService()
-        suggest_command_service = SuggestCommand()
-
-        if not repository.is_git_repository():
-            logger.error("Not a git repository.")
-            raise CmtError("Not a git repository.")
-
-        staged_files = repository.get_staged_changes()
-
-        if not staged_files.files:
-            logger.warning(
-                "No staged files found. Please stage your changes before running this command."
-            )
-            console.print_warning(
-                "No staged files found. Please stage your changes before running this command."
-            )
-            raise typer.Exit(code=0)
-
-        with console.get_console().status(
-            "[brand]Analyzing staged changes...[/brand]", spinner="dots"
-        ):
-            analysis_result = analyzer.analyze(staged_files)
-
-        commit_prompt = prompt_service.get_commit_prompt(staged_files, analysis_result)
-
-        with console.get_console().status(
-            "[brand]Generating commit message...[/brand]", spinner="dots"
-        ):
-            commit = suggest_command_service.run(commit_prompt)
-
-            console.print_suggested_commit(commit)
-
-        while True:
-            action = (
-                typer.prompt(
-                    "Would you like to use this commit message? [y]es / [e]dit / [n]o",
-                    default="y",
-                )
-                .strip()
-                .lower()[0]
-            )
-
-            if action == "n":
-                console.print_warning("Aborted.")
-                break
-
-            if action == "e":
-                commit = edit_with_vim(commit)
-                console.print_suggested_commit(commit)
-
-            if action == "y":
-                logger.info("Committing with message:\n\n%s", commit)
-                result = repository.commit(commit)
-
-                logger.info("Commit result:\n\n%s", result.stdout)
-                console.print_success("Code committed")
-                break
-
+        SuggestCommand().run()
     except CmtError as e:
         console.print_error(str(e))
         logger.error("CmtError: %s", e)
@@ -191,30 +130,7 @@ def update() -> None:
 @app.command()
 def summary() -> None:
     try:
-        repository_service = Repository()
-        analyzer_service = Analyzer()
-        prompt_service = PromptService()
-        summary_command_service = SummaryCommand()
-
-        if not repository_service.is_git_repository():
-            logger.error("Not a git repository.")
-            raise CmtError("Not a git repository.")
-
-        with console.get_console().status("[brand]Analyzing changes...[/brand]", spinner="dots"):
-            changes = repository_service.get_current_changes()
-
-            if len(changes.files) == 0:
-                logger.info("No changes detected.")
-                console.print_info("No changes detected.")
-                raise typer.Exit(code=0)
-
-            analysis_result = analyzer_service.analyze(changes)
-            prompt = prompt_service.get_summary_prompt(changes, analysis_result)
-
-        with console.get_console().status("[brand]Preparing summary...[/brand]", spinner="dots"):
-            summary = summary_command_service.run(prompt)
-            console.print(console.render_summary_panel(summary))
-
+        SummaryCommand().run()
     except CmtError as e:
         console.print_error(str(e))
         logger.error("CmtError: %s", e)

@@ -35,6 +35,7 @@
 
 - Analyzes staged Git changes (added, modified, deleted, and renamed files, plus diffs)
 - Generates a commit message and description using OpenAI (via LangChain)
+- Summarizes all current working-tree changes (staged and unstaged) with `cmt summary`
 - Review, edit (in `vim`), or reject the suggested message before committing
 - Caches suggestions per diff/model to avoid redundant API calls
 - Simple configuration for your OpenAI API key and model
@@ -83,6 +84,12 @@ You'll be shown a suggested commit message and can choose to:
 - `e` — edit the message in `vim` before committing
 - `n` — abort
 
+To get an AI-generated summary of all your current changes (staged and unstaged, compared to `HEAD`) without committing:
+
+```bash
+cmt summary
+```
+
 Other commands:
 
 ```bash
@@ -110,7 +117,7 @@ uv tool uninstall cmt-cli
 
 ## Privacy & Cost
 
-`cmt suggest` sends your staged diff to the OpenAI API to generate a commit message, so avoid staging secrets or sensitive data before running it. Each request uses your own OpenAI API key and is subject to OpenAI's standard usage pricing; `cmt-cli` caches suggestions per diff/model locally (`~/.config/cmt/cache`) to help avoid redundant, repeat API calls.
+`cmt suggest` sends your staged diff (and `cmt summary` your current diff) to the OpenAI API to generate a commit message, so avoid staging secrets or sensitive data before running it. Each request uses your own OpenAI API key and is subject to OpenAI's standard usage pricing; `cmt-cli` caches suggestions per diff/model locally (`~/.config/cmt/cache`) to help avoid redundant, repeat API calls.
 
 ## Development
 
