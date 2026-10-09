@@ -8,15 +8,12 @@
   <a href="https://pypi.org/project/cmt-cli/"><img src="https://img.shields.io/pypi/v/cmt-cli.svg" alt="PyPI version"></a>
   <a href="https://pypi.org/project/cmt-cli/"><img src="https://img.shields.io/pypi/pyversions/cmt-cli.svg" alt="Python versions"></a>
   <a href="https://github.com/bijaydas/cmt/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
-  <img src="https://img.shields.io/badge/status-beta-yellow.svg" alt="Beta status">
   <a href="https://github.com/bijaydas/cmt/actions/workflows/test.yml"><img src="https://github.com/bijaydas/cmt/actions/workflows/test.yml/badge.svg" alt="Tests"></a>
 </p>
 
 <p>
   AI-powered CLI tool that analyzes your staged Git changes and suggests a professional commit message.
 </p>
-
-> **Note:** `cmt-cli` is in **beta**. Expect occasional breaking changes and rough edges until a stable release.
 
 ## Table of Contents
 
@@ -61,7 +58,7 @@ Before first use, configure your OpenAI API key and model:
 cmt config set
 ```
 
-If no model is specified, `cmt-cli` defaults to `gpt-4o-mini`. Configuration is stored in `~/.config/cmt/config.ini`.
+If no model is specified, `cmt-cli` defaults to `gpt-4o-mini`. Configuration is stored in `~/.config/cmt/config.ini`. Note that your API key is saved there in plain text, so keep the file private (for example `chmod 600 ~/.config/cmt/config.ini`). Logs are written to `~/.config/cmt/logs`.
 
 To view your current configuration:
 
@@ -134,6 +131,7 @@ Run the test suite and linter:
 ```bash
 uv run pytest
 uv run ruff check .
+uv run ruff format --check .
 ```
 
 ## License
