@@ -1,6 +1,6 @@
 [project]
 name = "cmt-cli"
-version = "1.4.0"
+version = "1.4.1"
 description = "AI-powered Git commit message generator"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -30,7 +30,7 @@ cmt = "cmt.cli:app"
 
 [project.urls]
 Homepage = "https://github.com/bijaydas/cmt"
-Documentation = "https://github.com/bijaydas/cmt#readme"
+Documentation = "https://cmt.bijaydas.com/docs"
 Repository = "https://github.com/bijaydas/cmt"
 Issues = "https://github.com/bijaydas/cmt/issues"
 Changelog = "https://github.com/bijaydas/cmt/releases"
